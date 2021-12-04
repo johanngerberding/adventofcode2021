@@ -1,8 +1,8 @@
 #include <bits/stdc++.h>
 
-int binaryStringToDecimal(std::string str) {
+long long binaryStringToDecimal(std::string str) {
     long long binary = std::stoll(str);
-    int dec = 0;
+    long long dec = 0;
     int base = 1;
     long long temp = binary;
     while(temp) {
@@ -14,56 +14,67 @@ int binaryStringToDecimal(std::string str) {
     return dec;
 }
 
-void reduceVector(std::vector<std::string> &lines, 
-                                      int mode) {
-    // mode 1 -> keep bigger count 
-    // mode 0 -> keep smaller count 
+
+std::string reduce(std::vector<std::string> &lines, int mode) {
+    
     for (size_t i = 0; i < lines[0].size(); i++) {
-        size_t count = 0;
-        for (auto el: lines) {
-            if (mode == 1) {
-                if (el[i] == '1') {
-                    count++;
+        // count occurences
+        int oneCount {0};
+        int zeroCount {0};
+        for (auto line: lines) {
+            if (line[i] == '1') {
+                oneCount++;
+            } else {
+                zeroCount++;
+            }
+        }
+        std::stack<int> delIdxs;
+        if (mode == 1) {
+            // if more 1's -> del 0's
+            if (oneCount >= zeroCount) {
+                for (size_t j = 0; j < lines.size(); j++) {
+                    if (lines[j][i] == '0') {
+                        delIdxs.push(j);
+                    }
                 }
             } else {
-                if (el[i] == '0') {
-                    count++;
+                for (size_t j = 0; j < lines.size(); j++) {
+                    if (lines[j][i] == '1') {
+                        delIdxs.push(j);
+                    }
                 }
             }
-        }
-        std::stack<int> del_idxs;
-        char comp;
-        if (mode == 1) {
-            comp = '1';
         } else {
-            comp = '0';
-        }
-    
-        if (count >= (lines.size() / 2)) {
-            for (size_t j = 0; j < lines.size(); j++) {
-                if (lines[j][i] != comp) {
-                    del_idxs.push(j);
+            // if less or equal 0's -> del 1's
+            if (zeroCount <= oneCount) {
+                for (size_t j = 0; j < lines.size(); j++) {
+                    if (lines[j][i] == '1') {
+                        delIdxs.push(j);
+                    }
                 }
-            }
-            
-        } else {
-            for (size_t j = 0; j < lines.size(); j++) {
-                if (lines[j][i] == comp) {
-                    del_idxs.push(j);
+            } else {
+                for (size_t j = 0; j < lines.size(); j++) {
+                    if (lines[j][i] == '0') {
+                        delIdxs.push(j);
+                    }
                 }
             }
         }
 
-        while (!del_idxs.empty()) {
-            lines.erase(lines.begin() + del_idxs.top());
-            del_idxs.pop();
+        while (!delIdxs.empty() && !lines.empty()) {
+            lines.erase(lines.begin() + delIdxs.top());
+            delIdxs.pop();
         }
 
-        if (lines.size() == 1) {
-            return;
-        }
+        if (lines.size() == 1)
+            return lines[0];
+
     }
+    
+    return lines[0];
+
 }
+
 
 int main() {
 
@@ -74,30 +85,23 @@ int main() {
         lines.push_back(line);
     }
 
-    //std::string gamma;
-    //std::string epsilon;
-
     std::string oxygen_generator;
     std::string co_scrubber; 
 
-    std::cout << lines.size() << std::endl;
     std::vector<std::string> lines_copy;
-    lines_copy = lines;
+    for (size_t k=0; k<lines.size(); k++)
+        lines_copy.push_back(lines[k]);
 
-    reduceVector(lines, 1);
-    reduceVector(lines_copy, 0);
+    oxygen_generator = reduce(lines, 1);
+    co_scrubber = reduce(lines_copy, 0);
+    std::cout << oxygen_generator << std::endl;
+    std::cout << co_scrubber << std::endl;
 
-    std::cout << lines.size() << std::endl;
-    std::cout << lines_copy.size() << std::endl;
-    
-    oxygen_generator = lines[0];
-    co_scrubber = lines_copy[0];
-
-    int oxygen = binaryStringToDecimal(oxygen_generator);
+    long long oxygen = binaryStringToDecimal(oxygen_generator);
     std::cout << oxygen << std::endl;
-    int co = binaryStringToDecimal(co_scrubber);
+    long long co = binaryStringToDecimal(co_scrubber);
     std::cout << co << std::endl;
-    int result = oxygen * co;
+    long long result = oxygen * co;
     std::cout << result << std::endl;
     
     //int gammaRate = binaryStringToDecimal(gamma);
