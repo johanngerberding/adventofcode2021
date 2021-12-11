@@ -111,8 +111,9 @@ int main() {
     }
 
     int flashes = 0;
-    for (int i = 0; i < 100; i++) {
+    for (int i = 0; i < 100000; i++) {
         // step
+        int fl = 0;
         std::cout << "Round " << i << " - " << flashes << std::endl;
         for (auto &el: dumbos) {
             el.val++;
@@ -138,7 +139,12 @@ int main() {
             if (el.val > 9) {
                 el.val = 0;
                 flashes++;
+                fl++;
             }
+        }
+        if (fl == dumbos.size()) {
+            std::cout << "All flash: " << i+1 << std::endl;
+            break;
         }
     }
 
