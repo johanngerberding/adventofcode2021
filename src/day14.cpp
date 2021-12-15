@@ -37,7 +37,6 @@ int main() {
 
 
     for (int i=0; i < 40; i++) {
-        std::cout << "Step: " << i << std::endl;
         std::map<std::string, unsigned long long> paircounts2;
         for (auto &el: paircounts) {
             char temp1 = el.first[0];
