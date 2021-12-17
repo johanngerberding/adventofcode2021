@@ -1,10 +1,21 @@
 #include <bits/stdc++.h>
 
+// For part 2 this doesn't work unfortunately!
+// Very good solution: 
+// https://itnext.io/modern-c-in-advent-of-code-day16-6de15011455b
+
+
 int V_COUNT = 0;
 
 
-unsigned long long bin2Dec(std::string str) {
-    unsigned long long number = std::stoull(str, 0, 2);
+std::uintmax_t bin2Dec(std::string str) {
+    std::uintmax_t number = std::stoull(str, 0, 2);
+    std::string str2 = std::bitset<64>(number).to_string();
+    if (number != 0) {
+        size_t size = str.size();
+        str2 = str2.substr(str2.size() - size);
+        assert (str == str2);
+    }
     return number;
 }
 
@@ -41,13 +52,9 @@ void toBinary(std::string in, std::map<char, std::string> hex2bin, std::string &
     }
 }
 
-std::pair<unsigned long long, int> parse(std::string &packet, int pos) {
-    std::pair<unsigned long long, int> result;
-    if (pos >= packet.size()) {
-        return result;
-    }
-    unsigned long long version;
-    unsigned long long typeID;
+std::pair<std::uintmax_t, int> parse(std::string &packet, int pos) {
+    std::uintmax_t version;
+    std::uintmax_t typeID;
     std::string versionString = packet.substr(pos,3);
     pos += 3;
     std::string typeString = packet.substr(pos,3);
@@ -55,21 +62,20 @@ std::pair<unsigned long long, int> parse(std::string &packet, int pos) {
     V_COUNT += version;
     typeID = bin2Dec(typeString);
     pos += 3;
-    //std::cout << "Version count -> " << V_COUNT << std::endl;
 
     if (typeID != 4) {
         char lengthTypeID = packet[pos];
         pos += 1;
-        std::vector<unsigned long long> values;
+        std::vector<std::uintmax_t> values;
         if (lengthTypeID == '0') {
             // next 15 bits -> total length in bits
             std::string total_length = packet.substr(pos, 15);
             pos += 15;
-            unsigned long long totalLength = bin2Dec(total_length);
+            std::uintmax_t totalLength = bin2Dec(total_length);
             
             int start = pos; 
             while (true) {
-                result = parse(packet, pos);
+                std::pair<std::uintmax_t, int> result = parse(packet, pos);
                 values.push_back(result.first);
                 int next_pos = result.second;
                 assert (next_pos > pos);
@@ -81,35 +87,36 @@ std::pair<unsigned long long, int> parse(std::string &packet, int pos) {
         } else {
             // next 11 bits -> number of sub-packets immediately contained by this packet
             std::string num_packets = packet.substr(pos, 11);
-            unsigned long long numPackets = bin2Dec(num_packets);
+            std::uintmax_t numPackets = bin2Dec(num_packets);
             pos += 11;
             for (int i = 0; i < numPackets; i++) {
-                result = parse(packet, pos);
+                std::pair<std::uintmax_t, int> result = parse(packet, pos);
                 values.push_back(result.first);
                 assert (result.second > pos);
                 pos = result.second;
             }
         }
         if (typeID == 0) {
-            int sum = std::accumulate(values.begin(), values.end(), 0);
-            result = std::make_pair(sum, pos);
+            std::uintmax_t sum = std::accumulate(values.begin(), values.end(), 0);
+            std::pair<std::uintmax_t, int> result = std::make_pair(sum, pos);
             return result;
         } else if (typeID == 1) {
-            int mul = 1;
+            std::uintmax_t mul = 1;
             for (auto el: values) {
                 mul *= el;
             }
-            result = std::make_pair(mul, pos);
+            std::pair<std::uintmax_t, int> result = std::make_pair(mul, pos);
             return result;
         } else if (typeID == 2) {
             auto min = std::min_element(values.begin(), values.end());
-            result = std::make_pair((*min), pos);
+            std::pair<std::uintmax_t, int> result = std::make_pair((*min), pos);
             return result;
         } else if (typeID == 3) {
             auto max = std::max_element(values.begin(), values.end());
-            result = std::make_pair((*max), pos);
+            std::pair<std::uintmax_t, int> result = std::make_pair((*max), pos);
             return result;
         } else if (typeID == 5) {
+            std::pair<std::uintmax_t, int> result;
             if (values[0] > values[1]) {
                 result = std::make_pair(1, pos);
             } else {
@@ -117,6 +124,7 @@ std::pair<unsigned long long, int> parse(std::string &packet, int pos) {
             }
             return result;
         } else if (typeID == 6) {
+            std::pair<std::uintmax_t, int> result;
             if (values[0] < values[1]) {
                 result = std::make_pair(1, pos);
             } else {
@@ -124,36 +132,34 @@ std::pair<unsigned long long, int> parse(std::string &packet, int pos) {
             }
             return result;
         } else if (typeID == 7) {
+            std::pair<std::uintmax_t, int> result;
             if (values[0] == values[1]) {
                 result = std::make_pair(1, pos);
             } else {
                 result = std::make_pair(0, pos);
             }
             return result;
-        }
-
-    } else {
-        int step = 5;
-        std::string wholeNumber;
+        } 
+    } else if (typeID == 4) {
+        std::string wholeNumber = "";
         while (true) {
             std::string number;
-            std::string tmp = packet.substr(pos, step);
-            pos += step;
+            std::string tmp = packet.substr(pos, 5);
+            pos += 5;
             for (int j = 1; j < tmp.size(); j++) {
                 number.push_back(tmp[j]);
             }
             wholeNumber += number;
-            if (tmp[0] == '0') {;
-                unsigned long long res = bin2Dec(wholeNumber);
-                std::cout << res << std::endl;
-                assert (res > 0);
-                result = std::make_pair(res, pos);
-                return result;
+            assert (wholeNumber.size() % 4 == 0);
+            if (tmp[0] == '0') {
+                break;
             }
         }
-        
+        std::uintmax_t res = bin2Dec(wholeNumber);
+        assert (res > 0);
+        std::pair<std::uintmax_t, int> result = std::make_pair(res, pos);
+        return result;
     }
-    return result;
 }
 
 
@@ -185,7 +191,7 @@ int main() {
     toBinary(line, hexToBinary, bin);
     std::cout << "Binary: " << bin << std::endl;
 
-    std::pair<unsigned long long, int> result = parse(bin, 0);
+    std::pair<std::uintmax_t, int> result = parse(bin, 0);
 
     std::cout << V_COUNT << std::endl;
     std::cout << result.first << std::endl;
