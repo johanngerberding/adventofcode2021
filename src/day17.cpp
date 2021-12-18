@@ -125,6 +125,7 @@ int main() {
     std::getline(infile, target);
 
     std::vector<int> targetArea = parseTargetArea(target);
+    std::vector<std::pair<int,int>> velocities;
 
     for (auto el: targetArea) {
         std::cout << el << std::endl;
@@ -159,7 +160,6 @@ int main() {
     p->targetArea = targetArea;
     for (int x = x_v_min; x <= x_v_max; x++) {
         for (int y = y_v_min; y <= y_v_max; y++) {
-            std::cout << "Test (" << x << "," << y << ")" << std::endl;
             p->x = 0;
             p->y = 0;
             p->steps = 0;
@@ -170,6 +170,8 @@ int main() {
                 p->step();
                 if (p->terminate()) {
                     if (p->inTargetArea()) {
+                        auto vel = std::make_pair(x,y);
+                        velocities.push_back(vel);
                         auto it = std::max_element(p->trajectory.begin(), p->trajectory.end());
                         if ((*it) > max_y) {
                             max_y = (*it);
@@ -182,6 +184,7 @@ int main() {
     }
 
     std::cout << "max y = " << max_y << std::endl;
+    std::cout << "number of initial velocities: " << velocities.size() << std::endl;
 
     return 0;
 }
